@@ -1,0 +1,42 @@
+{
+  "name": "api.ai",
+  "version": "1.0.0",
+  "description": "Ultimate Node.JS SDK for api.ai",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dtesler/node-api.ai.git"
+  },
+  "keywords": [
+    "api.ai",
+    "api",
+    "ai",
+    "apiai",
+    "natural",
+    "language",
+    "processing",
+    "nlp",
+    "wit",
+    "ai",
+    "witai",
+    "wit.ai",
+    "api-ai",
+    "wit-ai",
+    "artificial",
+    "intelligence",
+    "ai"
+  ],
+  "author": "David Tesler",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dtesler/node-api.ai/issues"
+  },
+  "homepage": "https://github.com/dtesler/node-api.ai#readme",
+  "dependencies": {
+    "bluebird": "^3.4.5"
+  },
+  "devDependencies": {}
+}
