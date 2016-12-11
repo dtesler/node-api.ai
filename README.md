@@ -19,7 +19,8 @@ Your client access token can be obtained in your [Dashboard](https://console.api
 const apiai = require("api.ai");
 
 const nlp = new apiai({
-  token: "<your client access token>"
+  token: "<your client access token>",
+  session: "<unique session id>"
 });
 ```
 
