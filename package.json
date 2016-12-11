@@ -1,6 +1,6 @@
 {
   "name": "api.ai",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Ultimate Node.JS SDK for api.ai",
   "main": "index.js",
   "scripts": {
