@@ -6,17 +6,17 @@
 
 'use strict';
 
-var Request = require('./request').Request;
+var JSONApiRequest = require('./json_api_request').JSONApiRequest;
 var util = require('util');
 
 exports.UserEntitiesRequest = module.exports.UserEntitiesRequest = UserEntitiesRequest;
 
-util.inherits(UserEntitiesRequest, Request);
+util.inherits(UserEntitiesRequest, JSONApiRequest);
 
-function UserEntitiesRequest(application, user_entities, options) {
+function UserEntitiesRequest(application, user_entities_body, options) {
     var self = this;
 
-    self.user_entities = user_entities
+    self.user_entities_body = user_entities_body;
 
     UserEntitiesRequest.super_.apply(this, [application, options]);
 }
@@ -32,16 +32,28 @@ UserEntitiesRequest.prototype._headers = function() {
 UserEntitiesRequest.prototype._requestOptions = function() {
     var request_options = UserEntitiesRequest.super_.prototype._requestOptions.apply(this, arguments);
 
-    request_options.path = this.endpoint + 'userEntities'
-    request_options.method = 'POST'
+    request_options.path = this.endpoint + 'userEntities';
+    request_options.method = 'POST';
 
-    return request_options
+    return request_options;
 };
 
 UserEntitiesRequest.prototype.end = function() {
     var self = this;
 
-    self.write(JSON.stringify(self.user_entities));
-    
+    if (
+        (!('user_entities_body' in self)) ||
+        (!('entities' in self.user_entities_body))
+       )
+    {
+        throw Error(
+            'Data format for user untities request was changed. \n' +
+            'See details: https://docs.api.ai/docs/userentities \n' +
+            '...or see examples.'
+        );
+    }
+
+    self.write(JSON.stringify(self.user_entities_body));
+
     UserEntitiesRequest.super_.prototype.end.apply(this, arguments);
 };

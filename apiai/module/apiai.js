@@ -6,21 +6,49 @@
 
 'use strict';
 
-var util = require('util');
+/**
+ * Module dependencies.
+ * @private
+ */
 
+var https = require('https');
+var http = require('http');
 
+var ContextsRequest = require('./contexts_request').ContextsRequest;
+var DeleteContextsRequest = require('./delete_contexts_request').DeleteContextsRequest;
 var TextRequest = require('./text_request').TextRequest;
+var EventRequest = require('./event_request').EventRequest;
 var VoiceRequest = require('./voice_request').VoiceRequest;
 var UserEntitiesRequest = require('./user_entities_request').UserEntitiesRequest;
+var TTSRequest = require('./tts_request').TTSRequest;
 
-var version = '20150910'
-var language = 'en'
-var hostname = 'api.api.ai'
-var endpoint = '/v1/'
-var defaultSource = 'node'
+/**
+ * Module variables.
+ * @private
+ */
 
-function createApplicationDeprecated(clientAccessToken, subscriptionKey, options) {
-    var options = options || {};
+var version = '20150910';
+var language = 'en';
+var hostname = 'api.api.ai';
+var endpoint = '/v1/';
+var defaultSource = 'node';
+
+/**
+ * Module exports.
+ * @public
+ */
+
+exports = module.exports = createApplication;
+
+/**
+ * Old version function for creation application instance.
+ * @param  {string} clientAccessToken Access token. You can get it on https://api.ai
+ * @param  {string} subscriptionKey   Subscribtion key. It has not been used anymore.
+ * @param  {object} _options          Default option for apllication.
+ * @return {Application}              [description]
+ */
+function createApplicationDeprecated(clientAccessToken, subscriptionKey, _options) {
+    var options = _options || {};
 
     if (!clientAccessToken) {
         throw new Error('\'clientAccessToken\' cannot be empty.');
@@ -29,8 +57,15 @@ function createApplicationDeprecated(clientAccessToken, subscriptionKey, options
     return new Application(clientAccessToken, options);
 }
 
-function createApplicationNew(clientAccessToken, options) {
-    var options = options || {};
+/**
+ * New version function for creation application instance.
+ * @param  {string} clientAccessToken Access token. You can get it on https://api.ai
+ * @param  {string} subscriptionKey   Subscribtion key. It has not been used anymore.
+ * @param  {object} _options          Default option for apllication.
+ * @return {Application}              [description]
+ */
+function createApplicationNew(clientAccessToken, _options) {
+    var options = _options || {};
 
     if (!clientAccessToken) {
         throw new Error('\'clientAccessToken\' cannot be empty.');
@@ -39,21 +74,26 @@ function createApplicationNew(clientAccessToken, options) {
     return new Application(clientAccessToken, options);
 }
 
-function createApplication(args) {
+/**
+ * Create an api.ai application.
+ *
+ * @param {*} args [description]
+ * @return {Function}
+ * @api public
+ */
+function createApplication() {
     if (arguments.length > 1) {
         if (typeof arguments[1] == "string") {
-            return createApplicationDeprecated.apply(this, arguments)
+            return createApplicationDeprecated.apply(this, arguments);
         } else if (typeof arguments[1] == "object") {
-            return createApplicationNew.apply(this, arguments)
+            return createApplicationNew.apply(this, arguments);
         } else {
             throw new Error('Wrong parameters of initialization.');
         }
     } else {
-        return createApplicationNew.apply(this, arguments)
+        return createApplicationNew.apply(this, arguments);
     }
 }
-
-exports = module.exports = createApplication;
 
 function Application (clientAccessToken, options) {
     var self = this;
@@ -68,14 +108,51 @@ function Application (clientAccessToken, options) {
     self.endpoint = options.endpoint || endpoint;
     self.requestSource = options.requestSource || defaultSource;
 
-
     if ('secure' in options) {
         self.secure = options.secure;
     } else {
         self.secure = true;
     }
+
+    var _http = self.secure ? https : http;
+    self._agent = new _http.Agent({ keepAlive: true });
+}
+
+Application.prototype.contextsRequest = function(contexts, options) {
+    var self = this;
+
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    return new ContextsRequest(self, contexts, opt);
 };
 
+/**
+ * Delete/Reset all contexts for session by ID.
+ * @param  {object} options Options for DeleteContextsRequest. Should contain sessionId.
+ * @return {ContextsRequest}           Returns a ContextsRequest object.
+ */
+Application.prototype.deleteContextsRequest = function(options) {
+    var self = this;
+
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    return new DeleteContextsRequest(self, opt);
+}
+
+/**
+ * [textRequest description]
+ * @param  {[type]} query   [description]
+ * @param  {[type]} options [description]
+ * @return {[type]}         [description]
+ */
 Application.prototype.textRequest = function(query, options) {
     var self = this;
     var opt = options || {};
@@ -85,12 +162,35 @@ Application.prototype.textRequest = function(query, options) {
     }
 
     if (!('version' in opt)) {
-        opt.version = self.version
+        opt.version = self.version;
     }
 
     return new TextRequest(self, query, opt);
 };
 
+Application.prototype.eventRequest = function(event, options) {
+    var self = this;
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    if (!('version' in opt)) {
+        opt.version = self.version;
+    }
+
+    return new EventRequest(self, event, opt);
+};
+
+/**
+ * Make voice request object.
+ * @param  {object} [options={}] Optionos for voice request.
+ * @param  {string} [options.endpoint] [description]
+ * @param  {string} [options.version] [description]
+ * @return {VoiceRequest}         [description]
+ * @deprecated since version 2.0
+ */
 Application.prototype.voiceRequest = function(options) {
     var self = this;
     var opt = options || {};
@@ -100,13 +200,19 @@ Application.prototype.voiceRequest = function(options) {
     }
 
     if (!('version' in opt)) {
-        opt.version = self.version
+        opt.version = self.version;
     }
 
     return new VoiceRequest(self, opt);
 };
 
-Application.prototype.userEntitiesRequest = function(user_entities, options) {
+/**
+ * [userEntitiesRequest description]
+ * @param  {[type]} user_entities_body  [description]
+ * @param  {[type]} options             [description]
+ * @return {[type]}                     [description]
+ */
+Application.prototype.userEntitiesRequest = function(user_entities_body, options) {
     var self = this;
     var opt = options || {};
 
@@ -114,5 +220,16 @@ Application.prototype.userEntitiesRequest = function(user_entities, options) {
         opt.endpoint = self.endpoint;
     }
 
-    return new UserEntitiesRequest(self, user_entities, opt);
+    return new UserEntitiesRequest(self, user_entities_body, opt);
+};
+
+Application.prototype.ttsRequest = function(text, options) {
+    var self = this;
+    var opt = options || {};
+
+    if (!('endpoint' in opt)) {
+        opt.endpoint = self.endpoint;
+    }
+
+    return new TTSRequest(self, text, opt);
 };

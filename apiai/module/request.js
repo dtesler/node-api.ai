@@ -29,25 +29,10 @@ function Request (application, options) {
 
     var requestOptions = self._requestOptions();
 
+    requestOptions.agent = application._agent;
+
     var request = _http.request(requestOptions, function(response) {
-        var body = '';
-
-        response.on('data', function(chunk) {
-            body += chunk;
-        });
-
-        response.on('end', function() {
-            if (response.statusCode >= 200 && response.statusCode <= 299) {
-                try {
-                    self.emit('response', JSON.parse(body));
-                } catch (error) {
-                    self.emit('error', error);
-                }
-            } else {
-                var error = 'Server response error with status code: ' + response.statusCode + '\n' + body;
-                self.emit('error', error);
-            }
-        });
+        self._handleResponse(response);
     });
 
     request.on('error', function(error) {
@@ -56,6 +41,10 @@ function Request (application, options) {
 
     self.request = request;
 }
+
+Request.prototype._handleResponse = function(response) {
+    throw new Error("Can't call abstract method!");
+};
 
 Request.prototype._headers = function() {
     var self = this;
@@ -72,7 +61,7 @@ Request.prototype._requestOptions = function() {
 
     return {
         hostname: self.hostname,
-        headers: self._headers()
+        headers: self._headers(),
     };
 };
 
